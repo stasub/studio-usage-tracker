@@ -393,6 +393,7 @@
     return opts;
   }
   const TIME_OPTS = timeOptions();
+  const END_TIME_OPTS = [...TIME_OPTS, '24:00'];
 
   function localDateString(d){
     return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
@@ -714,8 +715,9 @@
     document.querySelectorAll('.log-row[data-id]').forEach(el=>el.addEventListener('click',()=>{ const entry=allEntries.find(e=>e.id===el.dataset.id); if(entry) openSheet(entry.room,entry); }));
   }
 
-  function buildTimeSelect(selectEl,selected){
-    selectEl.innerHTML=TIME_OPTS.map(t=>`<option value="${t}" ${t===selected?'selected':''}>${t}</option>`).join('');
+  function buildTimeSelect(selectEl,selected,isEnd=false){
+    const opts = isEnd ? END_TIME_OPTS : TIME_OPTS;
+    selectEl.innerHTML=opts.map(t=>`<option value="${t}" ${t===selected?'selected':''}>${t}</option>`).join('');
   }
 
   function openSheet(roomId,entry){
@@ -731,8 +733,8 @@
 
     const defaults=defaultEntryDateTime();
     document.getElementById('dateInput').value=entry?entry.date:defaults.date;
-    buildTimeSelect(document.getElementById('startSelect'),entry?entry.start:defaults.start);
-    buildTimeSelect(document.getElementById('endSelect'),entry?entry.end:defaults.end);
+    buildTimeSelect(document.getElementById('startSelect'),entry?entry.start:defaults.start,false);
+    buildTimeSelect(document.getElementById('endSelect'),entry?entry.end:defaults.end,true);
 
     peopleCount=entry?entry.people:1;
     document.getElementById('peopleValue').textContent=peopleCount;
