@@ -1,0 +1,865 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="利用目的">
+<meta name="theme-color" content="#f6f3ee">
+<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+<title>利用目的トラッカー | スタジオ利用記録</title>
+<style>
+  :root{
+    --ink:#171512;
+    --paper:#f6f3ee;
+    --card:#ffffff;
+    --soft:#fbfaf7;
+    --line:rgba(23,21,18,0.10);
+    --line-strong:rgba(23,21,18,0.18);
+    --muted:rgba(23,21,18,0.50);
+    --muted2:rgba(23,21,18,0.38);
+    --room-a:#8a6d4f;
+    --room-b:#d9730d;
+    --room-c:#6b9c3d;
+    --danger:#a8362a;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{
+    margin:0; padding:0; background:var(--paper); color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans JP",sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  body{
+    padding-top:env(safe-area-inset-top);
+    padding-bottom:calc(env(safe-area-inset-bottom) + 16px);
+  }
+  button,select,input{font:inherit;}
+  .wrap{max-width:520px; margin:0 auto; padding:0 16px;}
+
+  header{padding:22px 0 10px;}
+  .eyebrow{
+    font-size:11px; letter-spacing:.14em; text-transform:uppercase;
+    color:var(--muted); font-weight:650; margin-bottom:4px;
+  }
+  h1{
+    font-size:24px; margin:0; font-weight:800; letter-spacing:-0.01em;
+    font-family:Georgia,"Hiragino Mincho ProN",serif;
+  }
+
+  .mode-row{display:flex; gap:8px; margin-top:16px;}
+  .mode-btn{
+    flex:1; padding:10px 0; border-radius:12px; border:1.5px solid var(--line-strong);
+    background:#fff; font-size:13px; font-weight:750; color:rgba(23,21,18,0.55); cursor:pointer;
+  }
+  .mode-btn.active{background:var(--ink); color:#fff; border-color:var(--ink);}
+
+  .period-nav{
+    display:flex; align-items:center; justify-content:space-between;
+    margin-top:10px; padding:10px 14px; background:#fff;
+    border:1px solid var(--line-strong); border-radius:14px;
+  }
+  .period-nav button{
+    border:none; background:none; font-size:20px; color:var(--ink);
+    width:36px; height:36px; border-radius:10px; cursor:pointer;
+  }
+  .period-nav button:active{background:var(--line);}
+  .period-label{font-size:16px; font-weight:750; font-variant-numeric:tabular-nums;}
+
+  .view-tabs{
+    margin-top:12px; display:grid; grid-template-columns:1.45fr repeat(3,1fr); gap:7px;
+  }
+  .view-tab{
+    border:1.5px solid var(--line-strong); background:#fff; color:var(--muted);
+    border-radius:11px; padding:9px 6px; font-size:12px; font-weight:800; cursor:pointer;
+  }
+  .view-tab.active{background:var(--ink); border-color:var(--ink); color:#fff;}
+
+  .metric-panel{
+    margin-top:10px; background:rgba(255,255,255,.64); border:1px solid var(--line);
+    border-radius:12px; padding:10px 11px;
+  }
+  .metric-panel-top{display:flex; align-items:center; justify-content:space-between; gap:10px;}
+  .metric-label{font-size:11px; color:var(--muted); font-weight:700; white-space:nowrap;}
+  .metric-toggle{display:flex; background:rgba(23,21,18,.06); border-radius:9px; padding:3px; flex:1; max-width:260px;}
+  .metric-btn{
+    flex:1; border:none; background:transparent; border-radius:7px; padding:7px 4px;
+    font-size:11.5px; color:var(--muted); font-weight:800; cursor:pointer;
+  }
+  .metric-btn.active{background:#fff; color:var(--ink); box-shadow:0 1px 4px rgba(23,21,18,.08);}
+  .metric-help{margin-top:6px; font-size:10px; color:var(--muted2); line-height:1.5;}
+
+  #content{margin-top:14px;}
+  .section-card{
+    background:#fff; border:1px solid var(--line-strong); border-radius:18px;
+    padding:16px; margin-bottom:14px;
+  }
+  .section-title-row{display:flex; align-items:flex-end; justify-content:space-between; gap:10px; margin-bottom:12px;}
+  .section-title{font-size:14px; font-weight:800;}
+  .section-sub{font-size:10.5px; color:var(--muted2); font-weight:650;}
+
+  .room-compare{display:flex; flex-direction:column; gap:10px;}
+  .room-summary{
+    border:1px solid var(--line); border-radius:14px; padding:12px; background:var(--soft);
+  }
+  .room-summary-top{display:flex; align-items:center; justify-content:space-between; gap:10px;}
+  .room-summary-left{display:flex; align-items:center; gap:10px; min-width:0;}
+  .room-badge{
+    width:38px; height:38px; border-radius:11px; display:flex; align-items:center;
+    justify-content:center; font-family:Georgia,serif; font-weight:800; font-size:18px;
+    color:#fff; flex-shrink:0;
+  }
+  .room-name{font-size:14px; font-weight:800;}
+  .room-sub{font-size:11px; color:var(--muted); font-variant-numeric:tabular-nums; margin-top:2px;}
+  .room-actions{display:flex; align-items:center; gap:6px; flex-shrink:0;}
+  .detail-btn,.add-btn{
+    border:none; cursor:pointer; font-weight:800; display:flex; align-items:center; justify-content:center;
+  }
+  .detail-btn{height:34px; padding:0 10px; border-radius:10px; background:#fff; color:var(--muted); font-size:11px; border:1px solid var(--line);}
+  .add-btn{width:34px; height:34px; border-radius:10px; background:#fff; color:var(--ink); font-size:20px; line-height:1; border:1px solid var(--line);}
+  .detail-btn:active,.add-btn:active{transform:scale(.96);}
+  .room-main-bar{height:8px; border-radius:999px; background:#ece9e3; overflow:hidden; margin-top:10px;}
+  .room-main-fill{height:100%; border-radius:999px; min-width:0;}
+  .room-top-purpose{margin-top:7px; font-size:10.5px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+
+  .kpi-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:12px;}
+  .kpi{background:var(--soft); border:1px solid var(--line); border-radius:12px; padding:10px 8px; text-align:center;}
+  .kpi-value{font-size:18px; font-weight:850; font-variant-numeric:tabular-nums; line-height:1.1;}
+  .kpi-label{font-size:10px; color:var(--muted); font-weight:650; margin-top:5px;}
+
+  .room-detail-head{display:flex; align-items:center; justify-content:space-between; gap:10px;}
+  .room-id{display:flex; align-items:center; gap:10px;}
+  .room-detail-add{
+    width:40px; height:40px; border-radius:11px; border:none; background:var(--paper);
+    font-size:23px; font-weight:700; color:var(--ink); cursor:pointer;
+  }
+
+  .purpose-list{display:flex; flex-direction:column; gap:12px;}
+  .purpose-row{}
+  .purpose-head{display:flex; align-items:baseline; justify-content:space-between; gap:10px; margin-bottom:5px;}
+  .purpose-name{font-size:12.5px; font-weight:760; min-width:0;}
+  .purpose-nums{font-size:11px; color:var(--muted); font-weight:650; font-variant-numeric:tabular-nums; white-space:nowrap;}
+  .purpose-bar-track{height:8px; border-radius:999px; background:#efede8; overflow:hidden;}
+  .purpose-bar-fill{height:100%; border-radius:999px;}
+  .purpose-row.zero{opacity:.48;}
+  .zero-toggle{
+    margin-top:12px; border:none; background:none; padding:4px 0; color:var(--muted);
+    font-size:11px; font-weight:700; cursor:pointer;
+  }
+  .overall-purpose-toggle{
+    width:100%; margin-top:14px; padding:11px 12px; border:1px solid var(--line);
+    border-radius:11px; background:var(--soft); color:var(--muted); text-align:left;
+    font-size:11.5px; font-weight:750; cursor:pointer;
+  }
+  .overall-purpose-toggle:active{background:#f2efe9;}
+  .overall-purpose-panel{margin-top:13px;}
+  .overall-purpose-panel .section-title-row{margin-bottom:10px;}
+  .empty-state{padding:8px 0 2px; text-align:center;}
+  .empty-state strong{display:block; font-size:14px; margin-bottom:5px;}
+  .empty-state span{font-size:11.5px; color:var(--muted); line-height:1.6;}
+
+  .trend-section{margin-top:16px; padding-top:14px; border-top:1px solid var(--line);}
+  .trend-head{display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px;}
+  .trend-title{font-size:11px; font-weight:750; color:var(--muted); letter-spacing:.03em;}
+  .trend-total{font-size:10px; color:var(--muted2); font-weight:700;}
+  .trend-chart{display:flex; align-items:flex-end; gap:5px; height:74px;}
+  .trend-bar-wrap{flex:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; height:100%; min-width:0;}
+  .trend-value{font-size:9px; font-weight:700; color:var(--muted); margin-bottom:3px; font-variant-numeric:tabular-nums;}
+  .trend-bar{width:100%; max-width:22px; border-radius:5px 5px 2px 2px; min-height:2px;}
+  .trend-bar.is-current{opacity:1;}
+  .trend-bar.not-current{opacity:.42;}
+  .trend-label{font-size:9px; color:var(--muted2); margin-top:4px; font-weight:650; white-space:nowrap;}
+
+  .log-toggle{
+    margin-top:14px; font-size:11.5px; color:var(--muted); font-weight:700; cursor:pointer; padding:5px 0 1px;
+  }
+  .log-list{margin-top:8px; display:flex; flex-direction:column; gap:6px;}
+  .log-list.hidden{display:none;}
+  .log-row{
+    display:flex; align-items:center; justify-content:space-between; gap:8px;
+    padding:10px 11px; background:var(--soft); border:1px solid var(--line); border-radius:10px; font-size:12px; cursor:pointer;
+  }
+  .log-main{min-width:0;}
+  .log-date{font-weight:800;}
+  .log-detail{color:var(--muted); font-size:10.8px; margin-top:3px; line-height:1.45;}
+  .log-chevron{color:rgba(23,21,18,0.3); font-size:16px; flex-shrink:0;}
+  .log-room-dot{width:7px; height:7px; border-radius:50%; display:inline-block; margin-right:5px; vertical-align:1px;}
+  .empty-note{font-size:11.5px; color:var(--muted2); padding:6px 2px;}
+
+  footer{text-align:center; font-size:11px; color:rgba(23,21,18,0.35); padding:8px 16px 6px; line-height:1.8;}
+  .backup-actions{display:flex; justify-content:center; gap:8px; flex-wrap:wrap; margin:10px 0 7px;}
+  .backup-btn{border:1px solid var(--line-strong); background:#fff; color:var(--ink); border-radius:10px; padding:8px 10px; font-size:11px; font-weight:750; cursor:pointer;}
+  .backup-btn:active{transform:scale(.97);}
+  .reset-link{color:rgba(168,54,42,0.6); font-weight:700; text-decoration:underline; cursor:pointer;}
+
+  .room-picker-grid{display:flex; flex-direction:column; gap:9px; margin-top:8px;}
+  .room-pick-btn{
+    width:100%; border:1.5px solid var(--line-strong); background:var(--paper); border-radius:14px;
+    padding:13px 14px; display:flex; align-items:center; justify-content:space-between; gap:12px;
+    cursor:pointer; color:var(--ink); text-align:left;
+  }
+  .room-pick-btn:active{transform:scale(.985);}
+  .room-pick-left{display:flex; align-items:center; gap:11px; min-width:0;}
+  .room-pick-title{font-size:14px; font-weight:800;}
+  .room-pick-sub{font-size:10.5px; color:var(--muted); margin-top:2px;}
+  .room-pick-chevron{font-size:20px; color:var(--muted2);}
+
+  /* Modal */
+  .overlay{
+    position:fixed; inset:0; background:rgba(23,21,18,0.45); display:flex;
+    align-items:flex-end; justify-content:center; z-index:50; opacity:0; pointer-events:none;
+    transition:opacity .2s ease;
+  }
+  .overlay.show{opacity:1; pointer-events:auto;}
+  .sheet{
+    background:#fff; width:100%; max-width:520px; border-radius:22px 22px 0 0;
+    padding:20px 20px calc(20px + env(safe-area-inset-bottom));
+    transform:translateY(30px); transition:transform .25s ease;
+    max-height:88vh; overflow-y:auto;
+  }
+  .overlay.show .sheet{transform:translateY(0);}
+  .sheet-handle{width:36px; height:4px; background:var(--line-strong); border-radius:99px; margin:0 auto 16px;}
+  .sheet h2{margin:0 0 4px; font-size:18px; font-weight:800;}
+  .sheet .room-tag{display:inline-flex; align-items:center; gap:6px; font-size:12px; font-weight:700; color:var(--muted); margin-bottom:14px;}
+  .room-dot{width:8px; height:8px; border-radius:50%;}
+  .field-label{font-size:12px; font-weight:700; color:var(--muted); margin:14px 0 8px;}
+  .date-input,.time-select{width:100%; padding:12px 14px; border-radius:12px; border:1.5px solid var(--line-strong); font-size:16px; background:var(--paper); color:var(--ink); font-family:inherit;}
+  .time-row{display:flex; align-items:center; gap:8px;}
+  .time-row .time-select{flex:1;}
+  .time-sep{font-weight:700; color:var(--muted2); flex-shrink:0;}
+  .people-row{display:flex; align-items:center; gap:14px;}
+  .people-btn{width:40px; height:40px; border-radius:11px; border:1.5px solid var(--line-strong); background:var(--paper); font-size:20px; font-weight:700; color:var(--ink); cursor:pointer;}
+  .people-value{font-size:19px; font-weight:800; min-width:44px; text-align:center; font-variant-numeric:tabular-nums;}
+  .purpose-grid{display:flex; flex-direction:column; gap:8px;}
+  .purpose-opt{padding:12px 14px; border-radius:12px; border:1.5px solid var(--line-strong); background:var(--paper); font-size:14px; font-weight:700; text-align:left; cursor:pointer;}
+  .purpose-opt.selected{background:var(--ink); color:#fff; border-color:var(--ink);}
+  .sheet-actions{display:flex; gap:10px; margin-top:20px;}
+  .btn{flex:1; padding:14px 0; border-radius:12px; border:none; font-size:15px; font-weight:800; cursor:pointer; font-family:inherit;}
+  .btn-cancel{background:var(--paper); color:var(--ink);}
+  .btn-confirm{background:var(--ink); color:#fff;}
+  .btn-confirm:disabled{opacity:.35;}
+  .btn-danger{background:var(--danger); color:#fff;}
+  .delete-row{margin-top:10px; text-align:center;}
+  .delete-row.hidden{display:none;}
+  .delete-link{color:rgba(168,54,42,0.7); font-size:12.5px; font-weight:700; text-decoration:underline; cursor:pointer;}
+
+  .toast{position:fixed; bottom:calc(env(safe-area-inset-bottom) + 18px); left:50%; transform:translateX(-50%) translateY(20px); background:var(--ink); color:#fff; padding:11px 18px; border-radius:999px; font-size:13px; font-weight:700; opacity:0; pointer-events:none; transition:all .25s ease; z-index:60; white-space:nowrap;}
+  .toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
+
+  @media (max-width:380px){
+    .view-tabs{grid-template-columns:1.35fr repeat(3,1fr); gap:5px;}
+    .view-tab{font-size:11px; padding:8px 4px;}
+    .purpose-name{font-size:12px;}
+    .purpose-nums{font-size:10.3px;}
+    .kpi-value{font-size:16px;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Studio Usage Purpose Log</div>
+    <h1>利用目的トラッカー</h1>
+    <div class="mode-row">
+      <button class="mode-btn active" id="modeMonth">月別</button>
+      <button class="mode-btn" id="modeYear">年別</button>
+    </div>
+    <div class="period-nav">
+      <button id="prevPeriod" aria-label="前へ">‹</button>
+      <div class="period-label" id="periodLabel">2026年9月</div>
+      <button id="nextPeriod" aria-label="次へ">›</button>
+    </div>
+    <div class="view-tabs" id="viewTabs">
+      <button class="view-tab active" data-view="all">全体</button>
+      <button class="view-tab" data-view="A">部屋A</button>
+      <button class="view-tab" data-view="B">部屋B</button>
+      <button class="view-tab" data-view="C">部屋C</button>
+    </div>
+    <div class="metric-panel">
+      <div class="metric-panel-top">
+        <div class="metric-label">割合の基準</div>
+        <div class="metric-toggle">
+          <button class="metric-btn active" id="metricHours">利用時間</button>
+          <button class="metric-btn" id="metricCount">利用回数</button>
+        </div>
+      </div>
+      <div class="metric-help">利用目的の％とバーは、ここで選んだ基準にそろえて表示します</div>
+    </div>
+  </header>
+
+  <main id="content"></main>
+
+  <footer>
+    30分単位で記録 ・ データはこの端末に保存されます
+    <div class="backup-actions">
+      <button class="backup-btn" id="exportBackupBtn">バックアップを書き出す</button>
+      <button class="backup-btn" id="importBackupBtn">バックアップから復元</button>
+      <input type="file" id="importBackupInput" accept="application/json,.json" hidden>
+    </div>
+    <span id="resetLink" class="reset-link">全データをリセットする</span>
+  </footer>
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <h2 id="sheetTitle">利用記録を追加</h2>
+    <div class="room-tag"><span class="room-dot" id="sheetRoomDot"></span><span id="sheetRoomName">部屋A</span></div>
+
+    <div class="field-label">日付</div>
+    <input type="date" class="date-input" id="dateInput">
+
+    <div class="field-label">利用時間(30分単位)</div>
+    <div class="time-row">
+      <select class="time-select" id="startSelect"></select>
+      <span class="time-sep">〜</span>
+      <select class="time-select" id="endSelect"></select>
+    </div>
+
+    <div class="field-label">人数</div>
+    <div class="people-row">
+      <button class="people-btn" id="peopleMinus">−</button>
+      <div class="people-value" id="peopleValue">1</div>
+      <button class="people-btn" id="peoplePlus">+</button>
+    </div>
+
+    <div class="field-label">利用目的</div>
+    <div class="purpose-grid" id="purposeGrid"></div>
+
+    <div class="sheet-actions">
+      <button class="btn btn-cancel" id="cancelBtn">キャンセル</button>
+      <button class="btn btn-confirm" id="confirmBtn" disabled>追加する</button>
+    </div>
+    <div class="delete-row hidden" id="deleteRow">
+      <span class="delete-link" id="deleteLink">この記録を削除する</span>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="resetOverlay">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <h2>全データをリセット</h2>
+    <p style="font-size:14px; color:rgba(23,21,18,0.65); line-height:1.6; margin:10px 0 0;">
+      すべての利用記録を完全に削除します。この操作は取り消せません。本当にリセットしますか？
+    </p>
+    <div class="sheet-actions">
+      <button class="btn btn-cancel" id="resetDismissBtn">キャンセル</button>
+      <button class="btn btn-danger" id="resetConfirmBtn">リセットする</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  const ROOMS = [
+    {id:'A', name:'部屋A', color:'var(--room-a)',
+      purposes:['ピアノ演奏/練習','連弾','ピアノ合わせ演奏/練習','ピアノレッスン','その他レッスン','その他','未選択']},
+    {id:'B', name:'部屋B', color:'var(--room-b)',
+      purposes:['[個人]楽器演奏/練習','[複数]楽器演奏/練習','[個人]うた演奏/練習','[複数]うた演奏/練習','レッスン利用','その他','未選択']},
+    {id:'C', name:'部屋C', color:'var(--room-c)',
+      purposes:['[個人]楽器演奏/練習','[複数]楽器演奏/練習','[個人]うた演奏/練習','[複数]うた演奏/練習','レッスン利用','その他','未選択']}
+  ];
+  const STORAGE_KEY = 'usage-entries:v1';
+
+  let allEntries = [];
+  let mode = 'month';
+  let metric = 'hours';
+  let activeView = 'all';
+  let curDate = new Date();
+  let openRoom = null;
+  let selectedPurpose = null;
+  let peopleCount = 1;
+  let editingId = null;
+  let expandedLogs = {all:false,A:false,B:false,C:false};
+  let showZeros = {A:false,B:false,C:false};
+  let showAllPurposes = false;
+
+  function pad(n){ return String(n).padStart(2,'0'); }
+  function ymKey(d){ return d.getFullYear()+'-'+pad(d.getMonth()+1); }
+  function yKey(d){ return String(d.getFullYear()); }
+  function ymLabel(ym){ const [y,m]=ym.split('-'); return y+'年'+parseInt(m,10)+'月'; }
+  function yLabel(y){ return y+'年'; }
+  function round1(n){ return Math.round(n*10)/10; }
+  function formatHours(h){ return round1(h)+'h'; }
+  function formatDateShort(dateStr){ const [y,m,d]=dateStr.split('-'); return `${parseInt(m,10)}/${parseInt(d,10)}`; }
+  function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+  function timeOptions(){
+    const opts=[];
+    for(let h=0; h<24; h++) for(let m=0; m<60; m+=30) opts.push(pad(h)+':'+pad(m));
+    return opts;
+  }
+  const TIME_OPTS = timeOptions();
+
+  function localDateString(d){
+    return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+  }
+  function localTimeString(d){
+    return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  }
+  function defaultEntryDateTime(){
+    const now=new Date();
+    const start=new Date(now);
+    start.setSeconds(0,0);
+    start.setMinutes(start.getMinutes()<30 ? 0 : 30);
+    const end=new Date(start.getTime()+60*60*1000);
+    return {date:localDateString(now), start:localTimeString(start), end:localTimeString(end)};
+  }
+
+  function durationHours(start,end){
+    const [sh,sm]=start.split(':').map(Number);
+    const [eh,em]=end.split(':').map(Number);
+    let mins=(eh*60+em)-(sh*60+sm);
+    if(mins<=0) mins+=24*60;
+    return Math.round((mins/60)*100)/100;
+  }
+
+  async function loadData(){
+    try{
+      const raw=localStorage.getItem(STORAGE_KEY);
+      allEntries=raw ? JSON.parse(raw) : [];
+    }catch(e){ allEntries=[]; }
+    render();
+  }
+  async function saveData(){
+    try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(allEntries)); }
+    catch(e){ showToast('保存に失敗しました'); }
+  }
+
+  function addMonthsToDate(d,n){ const nd=new Date(d); nd.setMonth(nd.getMonth()+n); return nd; }
+  function trendMonths(){
+    if(mode==='year'){
+      const y=yKey(curDate), out=[];
+      for(let m=1;m<=12;m++) out.push({ym:y+'-'+pad(m),label:m+'月'});
+      return out;
+    }
+    const out=[];
+    for(let i=5;i>=0;i--){ const d=addMonthsToDate(curDate,-i); out.push({ym:ymKey(d),label:(d.getMonth()+1)+'月'}); }
+    return out;
+  }
+
+  function inPeriod(entry){
+    if(mode==='month') return entry.date.slice(0,7)===ymKey(curDate);
+    return entry.date.slice(0,4)===yKey(curDate);
+  }
+  function entriesForPeriod(roomId=null){
+    return allEntries.filter(e => (!roomId || e.room===roomId) && inPeriod(e))
+      .sort((a,b)=>(b.date+b.start).localeCompare(a.date+a.start));
+  }
+  function entryStats(entries){
+    return {
+      count: entries.length,
+      hours: round1(entries.reduce((s,e)=>s+durationHours(e.start,e.end),0)),
+      people: entries.reduce((s,e)=>s+(Number(e.people)||0),0)
+    };
+  }
+  function purposeStats(entries, purposes=null){
+    const map=new Map();
+    (purposes||[]).forEach(p=>map.set(p,{purpose:p,count:0,hours:0}));
+    entries.forEach(e=>{
+      if(!map.has(e.purpose)) map.set(e.purpose,{purpose:e.purpose,count:0,hours:0});
+      const item=map.get(e.purpose);
+      item.count++;
+      item.hours=round1(item.hours+durationHours(e.start,e.end));
+    });
+    return [...map.values()];
+  }
+  function metricValue(item){ return metric==='hours' ? item.hours : item.count; }
+  function metricTotal(entries){ const s=entryStats(entries); return metric==='hours' ? s.hours : s.count; }
+  function metricShort(item){ return metric==='hours' ? formatHours(item.hours) : item.count+'件'; }
+  function metricComplement(item){ return metric==='hours' ? item.count+'件' : formatHours(item.hours); }
+
+  function trendValues(roomId=null){
+    return trendMonths().map(tm=>{
+      const entries=allEntries.filter(e=>(!roomId || e.room===roomId) && e.date.slice(0,7)===tm.ym);
+      return metric==='hours' ? entryStats(entries).hours : entries.length;
+    });
+  }
+
+  function roomById(id){ return ROOMS.find(r=>r.id===id); }
+
+  function render(){
+    document.getElementById('modeMonth').classList.toggle('active',mode==='month');
+    document.getElementById('modeYear').classList.toggle('active',mode==='year');
+    document.getElementById('metricHours').classList.toggle('active',metric==='hours');
+    document.getElementById('metricCount').classList.toggle('active',metric==='count');
+    document.getElementById('periodLabel').textContent=mode==='month' ? ymLabel(ymKey(curDate)) : yLabel(yKey(curDate));
+    document.querySelectorAll('.view-tab').forEach(b=>b.classList.toggle('active',b.dataset.view===activeView));
+
+    const content=document.getElementById('content');
+    content.innerHTML = activeView==='all' ? renderAllView() : renderRoomView(activeView);
+    bindRenderedEvents();
+  }
+
+  function renderAllView(){
+    const periodEntries=entriesForPeriod();
+    const stats=entryStats(periodEntries);
+    const roomData=ROOMS.map(room=>{
+      const entries=entriesForPeriod(room.id);
+      const s=entryStats(entries);
+      const p=purposeStats(entries,room.purposes).filter(x=>x.count>0).sort((a,b)=>metricValue(b)-metricValue(a));
+      return {room,entries,stats:s,top:p[0]||null,value:metric==='hours'?s.hours:s.count};
+    });
+    const totalRoomMetric=metric==='hours' ? stats.hours : stats.count;
+
+    const allPurpose=purposeStats(periodEntries).filter(x=>x.count>0).sort((a,b)=>metricValue(b)-metricValue(a));
+    const totalMetric=Math.max(0,metricTotal(periodEntries));
+    const tMonths=trendMonths();
+    const tVals=trendValues();
+    const tMax=Math.max(1,...tVals);
+    const curYm=ymKey(curDate);
+
+    return `
+      <section class="section-card">
+        <div class="section-title-row">
+          <div>
+            <div class="section-title">スタジオ全体</div>
+            <div class="section-sub">まず全体像、そのあと各部屋の中身を見る構成</div>
+          </div>
+        </div>
+        <div class="kpi-grid">
+          <div class="kpi"><div class="kpi-value">${formatHours(stats.hours)}</div><div class="kpi-label">利用時間</div></div>
+          <div class="kpi"><div class="kpi-value">${stats.count}件</div><div class="kpi-label">利用回数</div></div>
+          <div class="kpi"><div class="kpi-value">${stats.people}人</div><div class="kpi-label">延べ人数</div></div>
+        </div>
+      </section>
+
+      <section class="section-card">
+        <div class="section-title-row">
+          <div class="section-title">部屋別サマリー</div>
+          <div class="section-sub">全体に占める${metric==='hours'?'利用時間':'利用回数'}の割合</div>
+        </div>
+        <div class="room-compare">
+          ${roomData.map(({room,stats:s,top,value})=>{
+            const share=totalRoomMetric>0 ? (value/totalRoomMetric)*100 : 0;
+            const shareLabel=Math.round(share);
+            return `
+              <div class="room-summary">
+                <div class="room-summary-top">
+                  <div class="room-summary-left">
+                    <div class="room-badge" style="background:${room.color}">${room.id}</div>
+                    <div>
+                      <div class="room-name">${room.name}</div>
+                      <div class="room-sub">${formatHours(s.hours)} ・ ${s.count}件 ・ ${s.people}人 ・ 全体の${shareLabel}%</div>
+                    </div>
+                  </div>
+                  <div class="room-actions">
+                    <button class="detail-btn" data-detail-room="${room.id}">詳細</button>
+                    <button class="add-btn" data-room="${room.id}" aria-label="${room.name}に追加">＋</button>
+                  </div>
+                </div>
+                <div class="room-main-bar"><div class="room-main-fill" style="width:${share}%; background:${room.color}"></div></div>
+                <div class="room-top-purpose">${top ? `最多：${escapeHtml(top.purpose)}（${metricShort(top)}）` : 'この期間の記録なし'}</div>
+              </div>`;
+          }).join('')}
+        </div>
+      </section>
+
+      <section class="section-card">
+        <div class="section-title-row">
+          <div class="section-title">スタジオ全体の推移</div>
+          <div class="section-sub">${metric==='hours'?'利用時間':'利用回数'}</div>
+        </div>
+        ${renderTrend(tMonths,tVals,tMax,curYm,'var(--ink)')}
+
+        ${allPurpose.length ? `
+          <button class="overall-purpose-toggle" data-all-purpose-toggle>
+            ${showAllPurposes?'▾':'▸'} 全体の利用目的を見る（${allPurpose.length}項目）
+          </button>
+          ${showAllPurposes ? `
+            <div class="overall-purpose-panel">
+              <div class="section-title-row">
+                <div class="section-title" style="font-size:12.5px">利用目的ランキング</div>
+                <div class="section-sub">0件は表示しません</div>
+              </div>
+              <div class="purpose-list">
+                ${allPurpose.map(item=>{
+                  const pct=totalMetric>0 ? Math.round((metricValue(item)/totalMetric)*100) : 0;
+                  return `
+                    <div class="purpose-row">
+                      <div class="purpose-head">
+                        <span class="purpose-name">${escapeHtml(item.purpose)}</span>
+                        <span class="purpose-nums">${metricShort(item)} (${pct}%) ・ ${metricComplement(item)}</span>
+                      </div>
+                      <div class="purpose-bar-track"><div class="purpose-bar-fill" style="width:${pct}%; background:var(--ink)"></div></div>
+                    </div>`;
+                }).join('')}
+              </div>
+            </div>` : ''}
+        ` : ''}
+
+        ${renderAllLogs(periodEntries)}
+      </section>
+    `;
+  }
+
+  function renderRoomView(roomId){
+    const room=roomById(roomId);
+    const entries=entriesForPeriod(roomId);
+    const stats=entryStats(entries);
+    const allP=purposeStats(entries,room.purposes);
+    const nonzero=allP.filter(x=>x.count>0).sort((a,b)=>metricValue(b)-metricValue(a));
+    const zeros=allP.filter(x=>x.count===0);
+    const shown=showZeros[roomId] ? [...nonzero,...zeros] : nonzero;
+    const totalMetric=metric==='hours'?stats.hours:stats.count;
+    const tMonths=trendMonths();
+    const tVals=trendValues(roomId);
+    const tMax=Math.max(1,...tVals);
+    const curYm=ymKey(curDate);
+
+    return `
+      <section class="section-card">
+        <div class="room-detail-head">
+          <div class="room-id">
+            <div class="room-badge" style="background:${room.color}">${room.id}</div>
+            <div><div class="room-name" style="font-size:16px">${room.name}</div><div class="room-sub">${mode==='month'?'この月':'この年'}の利用状況</div></div>
+          </div>
+          <button class="room-detail-add add-btn" data-room="${room.id}" aria-label="利用記録を追加">＋</button>
+        </div>
+        <div class="kpi-grid">
+          <div class="kpi"><div class="kpi-value">${formatHours(stats.hours)}</div><div class="kpi-label">利用時間</div></div>
+          <div class="kpi"><div class="kpi-value">${stats.count}件</div><div class="kpi-label">利用回数</div></div>
+          <div class="kpi"><div class="kpi-value">${stats.people}人</div><div class="kpi-label">延べ人数</div></div>
+        </div>
+      </section>
+
+      <section class="section-card">
+        <div class="section-title-row">
+          <div class="section-title">利用目的</div>
+          <div class="section-sub">${metric==='hours'?'時間':'回数'}の割合</div>
+        </div>
+        ${shown.length ? `
+          <div class="purpose-list">
+            ${shown.map(item=>{
+              const value=metricValue(item);
+              const pct=totalMetric>0 ? Math.round((value/totalMetric)*100) : 0;
+              return `
+                <div class="purpose-row ${item.count===0?'zero':''}">
+                  <div class="purpose-head">
+                    <span class="purpose-name">${escapeHtml(item.purpose)}</span>
+                    <span class="purpose-nums">${metricShort(item)} (${pct}%) ・ ${metricComplement(item)}</span>
+                  </div>
+                  <div class="purpose-bar-track"><div class="purpose-bar-fill" style="width:${pct}%; background:${room.color}"></div></div>
+                </div>`;
+            }).join('')}
+          </div>` : `
+          <div class="empty-state"><strong>この期間の記録は0件</strong><span>記録を追加すると、利用目的ごとの割合がここに表示されます</span></div>`}
+        ${zeros.length ? `<button class="zero-toggle" data-zero-room="${room.id}">${showZeros[roomId]?'▴ 0件の項目を隠す':'▾ 0件の項目も表示する（'+zeros.length+'項目）'}</button>`:''}
+
+        <div class="trend-section">
+          <div class="trend-head"><div class="trend-title">月ごとの推移</div><div class="trend-total">${metric==='hours'?'時間':'回数'}</div></div>
+          ${renderTrend(tMonths,tVals,tMax,curYm,room.color)}
+        </div>
+
+        ${renderRoomLogs(entries,room)}
+      </section>
+    `;
+  }
+
+  function renderTrend(months,values,maxValue,curYm,color){
+    return `<div class="trend-chart">
+      ${months.map((tm,i)=>{
+        const v=values[i];
+        const h=Math.round((v/maxValue)*100);
+        const isCur=tm.ym===curYm;
+        const display=metric==='hours' ? round1(v) : v;
+        return `
+          <div class="trend-bar-wrap">
+            <div class="trend-value">${display}</div>
+            <div class="trend-bar ${isCur?'is-current':'not-current'}" style="height:${v>0?Math.max(h,7):3}%; background:${color}"></div>
+            <div class="trend-label">${tm.label}</div>
+          </div>`;
+      }).join('')}
+    </div>`;
+  }
+
+  function renderRoomLogs(entries,room){
+    const key=room.id;
+    return `
+      <div class="log-toggle" data-log-key="${key}">${expandedLogs[key]?'▾':'▸'} 利用記録一覧（${entries.length}件）</div>
+      <div class="log-list ${expandedLogs[key]?'':'hidden'}">
+        ${entries.length===0 ? '<div class="empty-note">この期間の記録はありません</div>' : entries.map(e=>renderLogRow(e,false)).join('')}
+      </div>`;
+  }
+
+  function renderAllLogs(entries){
+    return `
+      <div class="log-toggle" data-log-key="all">${expandedLogs.all?'▾':'▸'} 全部屋の利用記録（${entries.length}件）</div>
+      <div class="log-list ${expandedLogs.all?'':'hidden'}">
+        ${entries.length===0 ? '<div class="empty-note">この期間の記録はありません</div>' : entries.map(e=>renderLogRow(e,true)).join('')}
+      </div>`;
+  }
+
+  function renderLogRow(e,showRoom){
+    const room=roomById(e.room);
+    return `
+      <div class="log-row" data-id="${e.id}">
+        <div class="log-main">
+          <span class="log-date">${showRoom?`<span class="log-room-dot" style="background:${room.color}"></span>${room.name} ・ `:''}${formatDateShort(e.date)}</span>
+          <div class="log-detail">${e.start}〜${e.end}（${durationHours(e.start,e.end)}h） ・ ${e.people}名 ・ ${escapeHtml(e.purpose)}</div>
+        </div>
+        <span class="log-chevron">›</span>
+      </div>`;
+  }
+
+  function bindRenderedEvents(){
+    document.querySelectorAll('[data-room].add-btn').forEach(btn=>btn.addEventListener('click',()=>openSheet(btn.dataset.room,null)));
+    document.querySelectorAll('[data-detail-room]').forEach(btn=>btn.addEventListener('click',()=>{ activeView=btn.dataset.detailRoom; render(); window.scrollTo({top:0,behavior:'smooth'}); }));
+    document.querySelectorAll('[data-zero-room]').forEach(btn=>btn.addEventListener('click',()=>{ const id=btn.dataset.zeroRoom; showZeros[id]=!showZeros[id]; render(); }));
+    document.querySelectorAll('[data-all-purpose-toggle]').forEach(btn=>btn.addEventListener('click',()=>{ showAllPurposes=!showAllPurposes; render(); }));
+    document.querySelectorAll('[data-log-key]').forEach(el=>el.addEventListener('click',()=>{ const key=el.dataset.logKey; expandedLogs[key]=!expandedLogs[key]; render(); }));
+    document.querySelectorAll('.log-row[data-id]').forEach(el=>el.addEventListener('click',()=>{ const entry=allEntries.find(e=>e.id===el.dataset.id); if(entry) openSheet(entry.room,entry); }));
+  }
+
+  function buildTimeSelect(selectEl,selected){
+    selectEl.innerHTML=TIME_OPTS.map(t=>`<option value="${t}" ${t===selected?'selected':''}>${t}</option>`).join('');
+  }
+
+  function openSheet(roomId,entry){
+    openRoom=roomId;
+    editingId=entry?entry.id:null;
+    const room=roomById(roomId);
+
+    document.getElementById('sheetTitle').textContent=entry?'利用記録を編集':'利用記録を追加';
+    document.getElementById('sheetRoomName').textContent=room.name;
+    document.getElementById('sheetRoomDot').style.background=room.color;
+    document.getElementById('confirmBtn').textContent=entry?'更新する':'追加する';
+    document.getElementById('deleteRow').classList.toggle('hidden',!entry);
+
+    const defaults=defaultEntryDateTime();
+    document.getElementById('dateInput').value=entry?entry.date:defaults.date;
+    buildTimeSelect(document.getElementById('startSelect'),entry?entry.start:defaults.start);
+    buildTimeSelect(document.getElementById('endSelect'),entry?entry.end:defaults.end);
+
+    peopleCount=entry?entry.people:1;
+    document.getElementById('peopleValue').textContent=peopleCount;
+    selectedPurpose=entry?entry.purpose:null;
+
+    const grid=document.getElementById('purposeGrid');
+    grid.innerHTML=room.purposes.map(p=>`<div class="purpose-opt ${p===selectedPurpose?'selected':''}" data-purpose="${escapeHtml(p)}">${escapeHtml(p)}</div>`).join('');
+    grid.querySelectorAll('.purpose-opt').forEach(el=>el.addEventListener('click',()=>{
+      selectedPurpose=el.dataset.purpose;
+      grid.querySelectorAll('.purpose-opt').forEach(o=>o.classList.remove('selected'));
+      el.classList.add('selected');
+      validateConfirm();
+    }));
+
+    validateConfirm();
+    document.getElementById('overlay').classList.add('show');
+  }
+
+  function closeSheet(){ document.getElementById('overlay').classList.remove('show'); }
+  function validateConfirm(){ document.getElementById('confirmBtn').disabled=!selectedPurpose; }
+  function showToast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),1600); }
+
+  document.getElementById('modeMonth').addEventListener('click',()=>{ mode='month'; render(); });
+  document.getElementById('modeYear').addEventListener('click',()=>{ mode='year'; render(); });
+  document.getElementById('metricHours').addEventListener('click',()=>{ metric='hours'; render(); });
+  document.getElementById('metricCount').addEventListener('click',()=>{ metric='count'; render(); });
+  document.getElementById('viewTabs').addEventListener('click',(e)=>{
+    const btn=e.target.closest('.view-tab'); if(!btn) return; activeView=btn.dataset.view; render();
+  });
+  document.getElementById('prevPeriod').addEventListener('click',()=>{ if(mode==='month') curDate.setMonth(curDate.getMonth()-1); else curDate.setFullYear(curDate.getFullYear()-1); render(); });
+  document.getElementById('nextPeriod').addEventListener('click',()=>{ if(mode==='month') curDate.setMonth(curDate.getMonth()+1); else curDate.setFullYear(curDate.getFullYear()+1); render(); });
+
+  document.getElementById('peopleMinus').addEventListener('click',()=>{ if(peopleCount>1){ peopleCount--; document.getElementById('peopleValue').textContent=peopleCount; } });
+  document.getElementById('peoplePlus').addEventListener('click',()=>{ if(peopleCount<99){ peopleCount++; document.getElementById('peopleValue').textContent=peopleCount; } });
+  document.getElementById('cancelBtn').addEventListener('click',closeSheet);
+  document.getElementById('overlay').addEventListener('click',(e)=>{ if(e.target.id==='overlay') closeSheet(); });
+
+  document.getElementById('confirmBtn').addEventListener('click',async()=>{
+    if(!selectedPurpose || !openRoom) return;
+    const date=document.getElementById('dateInput').value;
+    const start=document.getElementById('startSelect').value;
+    const end=document.getElementById('endSelect').value;
+    if(!date){ showToast('日付を選んでな'); return; }
+
+    if(editingId){
+      const entry=allEntries.find(e=>e.id===editingId);
+      if(entry){ entry.date=date; entry.start=start; entry.end=end; entry.people=peopleCount; entry.purpose=selectedPurpose; entry.updatedTs=Date.now(); }
+      await saveData(); closeSheet(); render(); showToast('更新しました');
+    }else{
+      const entry={id:Date.now().toString(36)+Math.random().toString(36).slice(2,7),room:openRoom,purpose:selectedPurpose,date,start,end,people:peopleCount,ts:Date.now()};
+      allEntries.push(entry); await saveData(); closeSheet(); render(); showToast(openRoom+'部屋に記録を追加しました');
+    }
+  });
+
+  document.getElementById('deleteLink').addEventListener('click',async()=>{
+    if(!editingId) return;
+    allEntries=allEntries.filter(e=>e.id!==editingId);
+    await saveData(); closeSheet(); render(); showToast('削除しました');
+  });
+
+  function backupFileName(){
+    const now=new Date();
+    return `studio-usage-backup_${localDateString(now)}_${pad(now.getHours())}${pad(now.getMinutes())}.json`;
+  }
+
+  document.getElementById('exportBackupBtn').addEventListener('click',()=>{
+    try{
+      const payload={
+        app:'studio-usage-tracker',
+        version:1,
+        exportedAt:new Date().toISOString(),
+        entries:allEntries
+      };
+      const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
+      const url=URL.createObjectURL(blob);
+      const a=document.createElement('a');
+      a.href=url;
+      a.download=backupFileName();
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(()=>URL.revokeObjectURL(url),1000);
+      showToast('バックアップを書き出しました');
+    }catch(e){
+      showToast('バックアップに失敗しました');
+    }
+  });
+
+  document.getElementById('importBackupBtn').addEventListener('click',()=>{
+    document.getElementById('importBackupInput').click();
+  });
+
+  document.getElementById('importBackupInput').addEventListener('change',async(e)=>{
+    const input=e.target;
+    const file=input.files && input.files[0];
+    if(!file) return;
+    try{
+      const text=await file.text();
+      const parsed=JSON.parse(text);
+      const restored=Array.isArray(parsed) ? parsed : parsed && Array.isArray(parsed.entries) ? parsed.entries : null;
+      if(!restored) throw new Error('invalid backup');
+      const validRooms=new Set(ROOMS.map(r=>r.id));
+      const isValid=restored.every(item=>item && validRooms.has(item.room) && typeof item.purpose==='string' && /^\d{4}-\d{2}-\d{2}$/.test(item.date||'') && /^\d{2}:\d{2}$/.test(item.start||'') && /^\d{2}:\d{2}$/.test(item.end||''));
+      if(!isValid) throw new Error('invalid entries');
+      const ok=confirm(`バックアップの${restored.length}件で、現在の${allEntries.length}件を置き換えます。よろしいですか？`);
+      if(!ok){ input.value=''; return; }
+      allEntries=restored;
+      await saveData();
+      render();
+      showToast('バックアップから復元しました');
+    }catch(err){
+      showToast('バックアップを読み込めませんでした');
+    }finally{
+      input.value='';
+    }
+  });
+
+  document.getElementById('resetLink').addEventListener('click',()=>document.getElementById('resetOverlay').classList.add('show'));
+  document.getElementById('resetDismissBtn').addEventListener('click',()=>document.getElementById('resetOverlay').classList.remove('show'));
+  document.getElementById('resetOverlay').addEventListener('click',(e)=>{ if(e.target.id==='resetOverlay') document.getElementById('resetOverlay').classList.remove('show'); });
+  document.getElementById('resetConfirmBtn').addEventListener('click',()=>{
+    allEntries=[]; try{localStorage.removeItem(STORAGE_KEY);}catch(err){}
+    document.getElementById('resetOverlay').classList.remove('show'); render(); showToast('全データをリセットしました');
+  });
+
+  loadData();
+})();
+</script>
+</body>
+</html>
